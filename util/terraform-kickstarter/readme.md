@@ -24,11 +24,11 @@ Installing Prowler with Terraform is simple and can be completed in under 1 minu
   
 - Issue a `terraform apply`
 
-  ![Prowler Install](docs/Prowler-Terraform-Install.gif)
+  ![Prowler Install](https://prowler-docs.s3.amazonaws.com/Prowler-Terraform-Install.gif)
   
    - It is likely an error will return related to the SecurityHub subscription.  This appears to be Terraform related and you can validate the configuration by navigating to the SecurityHub console.  Click Integreations and search for Prowler. Take noe of the green check where it says *Accepting findings*
   
-  ![Prowler Subscription](docs/Validate-Prowler-Subscription.gif)
+  ![Prowler Subscription](https://prowler-docs.s3.amazonaws.com/Validate-Prowler-Subscription.gif)
 
 
 Thats it!  Install is now complete.  The resources included a Cloudwatch event that will trigger the AWS Codebuild to run daily at 00:00 GMT.  If you'd like to run an assessment after the deployment then simply navigate to the Codebuild console and start the job manually.

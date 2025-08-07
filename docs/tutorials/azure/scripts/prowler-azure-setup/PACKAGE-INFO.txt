@@ -1,0 +1,17 @@
+Prowler Azure Setup Package
+Generated: Wed Jul 30 10:07:26 EDT 2025
+Version: 1.0
+
+Contents:
+- all-in-one-single-sub.sh    : Complete setup for single subscription
+- all-in-one-multi-sub.sh     : Complete setup for multiple subscriptions  
+- single-subscription-setup.sh: Core single subscription setup
+- multi-subscription-setup.sh : Core multi-subscription setup
+- setup-prowler.sh            : General setup functions
+- cleanup-prowler.sh          : Remove all created resources
+- troubleshoot-azure-auth.sh  : Diagnostic and troubleshooting
+- README.md                   : Complete instructions
+- QUICK-START.md              : Quick reference
+- CREDENTIALS-TEMPLATE.md     : Template for providing credentials back
+
+Start with: README.md

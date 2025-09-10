@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{DASHBOARD_TITLE}}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 40px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .dashboard-header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.3em;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+        
+        .export-info {
+            opacity: 0.8;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .export-info small {
+            font-size: 1em;
+        }
+        
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .summary-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .summary-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .summary-card.pass {
+            border-left: 5px solid #54d283;
+        }
+        
+        .summary-card.fail {
+            border-left: 5px solid #e67272;
+        }
+        
+        .summary-card.critical {
+            border-left: 5px solid #951649;
+        }
+        
+        .card-icon {
+            font-size: 2.5em;
+            opacity: 0.8;
+        }
+        
+        .card-content h3 {
+            font-size: 2.2em;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 700;
+        }
+        
+        .card-content p {
+            color: #7f8c8d;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        
+        .charts-section {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+        }
+        
+        .charts-section h2 {
+            margin-bottom: 30px;
+            color: #2c3e50;
+            font-size: 2.2em;
+            text-align: center;
+        }
+        
+        .chart-container {
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            background-color: #fafbfc;
+            border-radius: 10px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+        }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+        }
+        
+        .dashboard-footer {
+            text-align: center;
+            padding: 30px;
+            color: #7f8c8d;
+            border-top: 2px solid #ecf0f1;
+            background: white;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+        
+        .dashboard-footer strong {
+            color: #3498db;
+        }
+        
+        .error-message {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+        
+        .info-message {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .dashboard-header {
+                padding: 30px 20px;
+            }
+            
+            .dashboard-header h1 {
+                font-size: 2.2em;
+            }
+            
+            .summary-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .export-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .dashboard-header h1 {
+                font-size: 1.8em;
+            }
+            
+            .charts-section {
+                padding: 20px;
+            }
+            
+            .summary-card {
+                padding: 20px;
+            }
+        }
+        
+        /* Print styles */
+        @media print {
+            body {
+                background-color: white;
+            }
+            
+            .dashboard-header {
+                background: #667eea !important;
+                -webkit-print-color-adjust: exact;
+            }
+            
+            .summary-card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+            
+            .charts-section {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="dashboard-header">
+            <h1>🛡️ {{DASHBOARD_TITLE}}</h1>
+            <p class="subtitle">Comprehensive Cloud Security Assessment Results</p>
+            <div class="export-info">
+                <small>📅 Generated: {{EXPORT_TIMESTAMP}}</small>
+                <small>📊 Total Findings: {{TOTAL_FINDINGS}}</small>
+                <small>🔒 Self-Contained Dashboard</small>
+            </div>
+        </header>
+        
+        <!-- Summary Cards Section -->
+        {{SUMMARY_CARDS}}
+        
+        <!-- Charts Section -->
+        <div class="charts-section">
+            <h2>📈 Security Analysis Dashboard</h2>
+            <div class="charts-grid">
+                {{CHARTS_CONTENT}}
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <footer class="dashboard-footer">
+            <p><strong>Powered by Prowler</strong> - Open Source Cloud Security Assessment Tool</p>
+            <p><small>This dashboard is completely self-contained and works offline. No external dependencies required.</small></p>
+            <p><small>Visit <a href="https://prowler.com" style="color: #3498db;">prowler.com</a> for more information</small></p>
+        </footer>
+    </div>
+    
+    <!-- Embedded Data -->
+    <script type="application/json" id="dashboard-data">
+    {{DASHBOARD_DATA}}
+    </script>
+    
+    <!-- Optional: Add some JavaScript for enhanced interactivity -->
+    <script>
+        // Load dashboard data
+        const dashboardData = JSON.parse(document.getElementById('dashboard-data').textContent);
+        
+        // Console log for debugging
+        console.log('Prowler Dashboard Data:', dashboardData);
+        
+        // Add click handlers for enhanced interactivity
+        document.querySelectorAll('.summary-card').forEach(card => {
+            card.addEventListener('click', function() {
+                this.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 150);
+            });
+        });
+        
+        // Add export timestamp to page title
+        if (dashboardData.export_timestamp) {
+            document.title += ' - ' + new Date(dashboardData.export_timestamp).toLocaleDateString();
+        }
+        
+        // Add a simple print function
+        function printDashboard() {
+            window.print();
+        }
+        
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl+P or Cmd+P for print
+            if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+                e.preventDefault();
+                printDashboard();
+            }
+        });
+    </script>
+</body>
+</html>

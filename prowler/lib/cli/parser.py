@@ -26,7 +26,7 @@ class ProwlerArgumentParser:
         self.parser = argparse.ArgumentParser(
             prog="prowler",
             formatter_class=RawTextHelpFormatter,
-            usage="prowler [-h] [--version] {aws,azure,gcp,kubernetes,m365,github,nhn,mongodbatlas,dashboard,iac} ...",
+            usage="prowler [-h] [--version] {aws,azure,gcp,kubernetes,m365,github,nhn,mongodbatlas,dashboard,dashboard-export,iac} ...",
             epilog="""
 Available Cloud Providers:
   {aws,azure,gcp,kubernetes,m365,github,iac,nhn,mongodbatlas}
@@ -42,9 +42,10 @@ Available Cloud Providers:
 
 Available components:
     dashboard           Local dashboard
+    dashboard-export    Export dashboard as self-contained HTML
 
 To see the different available options on a specific component, run:
-    prowler {provider|dashboard} -h|--help
+    prowler {provider|dashboard|dashboard-export} -h|--help
 
 Detailed documentation at https://docs.prowler.com
 """,
@@ -101,6 +102,7 @@ Detailed documentation at https://docs.prowler.com
             len(sys.argv) >= 2
             and (sys.argv[1] not in ("-h", "--help"))
             and (sys.argv[1] not in ("-v", "--version"))
+            and (sys.argv[1] not in ("dashboard", "dashboard-export"))
         ):
             # Since the provider is always the second argument, we are checking if
             # a flag, starting by "-", is supplied

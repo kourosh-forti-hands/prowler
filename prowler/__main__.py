@@ -120,6 +120,24 @@ def prowler():
         from dashboard.__main__ import dashboard
 
         sys.exit(dashboard.run(**DASHBOARD_ARGS))
+    
+    if provider == "dashboard-export":
+        from prowler.lib.dashboard_export import export_dashboard
+        
+        # Extract arguments for dashboard export
+        output_directory = getattr(args, 'output_directory', None)
+        export_directory = getattr(args, 'export_directory', None)
+        export_format = getattr(args, 'export_format', 'static')
+        dashboard_title = getattr(args, 'dashboard_title', 'Prowler Security Dashboard')
+        
+        # Run the dashboard export
+        success = export_dashboard(
+            output_directory=output_directory,
+            export_format=export_format,
+            export_directory=export_directory
+        )
+        
+        sys.exit(0 if success else 1)
 
     checks = args.check
     excluded_checks = args.excluded_check

@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  prowler-scanner:
+    build:
+      context: ..
+      dockerfile: docker-automation/Dockerfile.multicloud
+    image: prowler-multicloud:latest
+    container_name: prowler-multicloud-scanner
+    
+    # Environment variables for cloud credentials
+    environment:
+      # AWS Credentials
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:-}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      
+      # Azure Credentials (Service Principal)
+      AZURE_CLIENT_ID: ${AZURE_CLIENT_ID:-}
+      AZURE_TENANT_ID: ${AZURE_TENANT_ID:-}
+      AZURE_CLIENT_SECRET: ${AZURE_CLIENT_SECRET:-}
+      AZURE_SUBSCRIPTION_ID: ${AZURE_SUBSCRIPTION_ID:-}
+      
+      # GCP Credentials
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-}
+      GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
+      GOOGLE_CLOUD_QUOTA_PROJECT: ${GOOGLE_CLOUD_QUOTA_PROJECT:-}
+      CLOUDSDK_AUTH_ACCESS_TOKEN: ${CLOUDSDK_AUTH_ACCESS_TOKEN:-}
+      
+      # Prowler Configuration
+      AUTO_SCAN: ${AUTO_SCAN:-true}
+      SCAN_ALL_COMPLIANCE: ${SCAN_ALL_COMPLIANCE:-true}
+      
+      # Dashboard Configuration
+      DASHBOARD_HOST: 0.0.0.0
+      DASHBOARD_PORT: 11666
+      
+      # Compliance Frameworks (optional - leave empty to scan all)
+      AWS_COMPLIANCE_FRAMEWORKS: ${AWS_COMPLIANCE_FRAMEWORKS:-}
+      AZURE_COMPLIANCE_FRAMEWORKS: ${AZURE_COMPLIANCE_FRAMEWORKS:-}
+      GCP_COMPLIANCE_FRAMEWORKS: ${GCP_COMPLIANCE_FRAMEWORKS:-}
+    
+    # Volume mounts
+    volumes:
+      # Output directory for scan results
+      - ./output:/home/prowler/output
+      - ./output/compliance:/home/prowler/output/compliance
+      
+      # Optional: Mount GCP service account key file
+      - ${GCP_KEY_FILE:-/dev/null}:/home/prowler/gcp-key.json:ro
+      
+      # Optional: Mount custom configuration
+      - ./scan-config.json:/home/prowler/scan-config.json:ro
+    
+    # Port mapping for dashboard
+    ports:
+      - "11666:11666"
+    
+    # Network configuration
+    networks:
+      - prowler-network
+    
+    # Command (can be overridden)
+    command: scan-and-dashboard
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11666/health", "||", "exit", "0"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '2'
+        reservations:
+          memory: 2G
+          cpus: '1'
+    
+    # Restart policy
+    restart: unless-stopped
+
+networks:
+  prowler-network:
+    driver: bridge
+
+volumes:
+  prowler-output:
+    driver: local

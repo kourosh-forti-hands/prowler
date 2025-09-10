@@ -1,0 +1,114 @@
+FROM python:3.12.11-slim-bookworm AS build
+
+LABEL maintainer="Prowler Multi-Cloud Automation"
+LABEL description="Automated Prowler scanner with AWS, Azure, and GCP CLIs"
+
+ARG POWERSHELL_VERSION=7.5.0
+ARG GCLOUD_VERSION=502.0.0
+
+# Install system dependencies and cloud CLIs
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget curl libicu72 libunwind8 libssl3 libcurl4 ca-certificates \
+    apt-transport-https gnupg lsb-release unzip groff less jq \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install AWS CLI v2
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then \
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" ; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip" ; \
+    fi && \
+    unzip -q awscliv2.zip && \
+    ./aws/install && \
+    rm -rf awscliv2.zip aws/
+
+# Install Azure CLI
+RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+
+# Install Google Cloud SDK
+RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | \
+    tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
+    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | \
+    gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg && \
+    apt-get update && \
+    apt-get install -y google-cloud-cli && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install PowerShell (for M365)
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then \
+        wget --progress=dot:giga https://github.com/PowerShell/PowerShell/releases/download/v${POWERSHELL_VERSION}/powershell-${POWERSHELL_VERSION}-linux-x64.tar.gz -O /tmp/powershell.tar.gz ; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+        wget --progress=dot:giga https://github.com/PowerShell/PowerShell/releases/download/v${POWERSHELL_VERSION}/powershell-${POWERSHELL_VERSION}-linux-arm64.tar.gz -O /tmp/powershell.tar.gz ; \
+    fi && \
+    mkdir -p /opt/microsoft/powershell/7 && \
+    tar zxf /tmp/powershell.tar.gz -C /opt/microsoft/powershell/7 && \
+    chmod +x /opt/microsoft/powershell/7/pwsh && \
+    ln -s /opt/microsoft/powershell/7/pwsh /usr/bin/pwsh && \
+    rm /tmp/powershell.tar.gz
+
+# Add prowler user
+RUN addgroup --gid 1000 prowler && \
+    adduser --uid 1000 --gid 1000 --disabled-password --gecos "" prowler
+
+USER prowler
+WORKDIR /home/prowler
+
+# Copy Prowler application files
+COPY --chown=prowler:prowler prowler/ /home/prowler/prowler/
+COPY --chown=prowler:prowler dashboard/ /home/prowler/dashboard/
+COPY --chown=prowler:prowler pyproject.toml /home/prowler
+COPY --chown=prowler:prowler README.md /home/prowler/
+
+# Install Python dependencies
+ENV HOME='/home/prowler'
+ENV PATH="${HOME}/.local/bin:${PATH}"
+
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir poetry
+
+RUN poetry install --compile && \
+    rm -rf ~/.cache/pip
+
+# Install PowerShell modules for M365
+RUN poetry run python prowler/providers/m365/lib/powershell/m365_powershell.py
+
+# Remove deprecated dash dependencies
+RUN pip uninstall dash-html-components -y && \
+    pip uninstall dash-core-components -y
+
+# Copy automation scripts
+COPY --chown=prowler:prowler docker-automation/entrypoint.sh /home/prowler/
+COPY --chown=prowler:prowler docker-automation/scan-config.json /home/prowler/
+
+RUN chmod +x /home/prowler/entrypoint.sh
+
+# Create output directory
+RUN mkdir -p /home/prowler/output /home/prowler/output/compliance
+
+# Environment variables for cloud credentials
+ENV AWS_ACCESS_KEY_ID=""
+ENV AWS_SECRET_ACCESS_KEY=""
+ENV AWS_SESSION_TOKEN=""
+ENV AWS_REGION="us-east-1"
+
+ENV AZURE_CLIENT_ID=""
+ENV AZURE_TENANT_ID=""
+ENV AZURE_CLIENT_SECRET=""
+ENV AZURE_SUBSCRIPTION_ID=""
+
+ENV GOOGLE_APPLICATION_CREDENTIALS=""
+ENV GOOGLE_CLOUD_PROJECT=""
+ENV GOOGLE_CLOUD_QUOTA_PROJECT=""
+
+# Dashboard configuration
+ENV DASHBOARD_HOST="0.0.0.0"
+ENV DASHBOARD_PORT="11666"
+ENV AUTO_SCAN="true"
+ENV SCAN_ALL_COMPLIANCE="true"
+
+EXPOSE 11666
+
+ENTRYPOINT ["/home/prowler/entrypoint.sh"]
+CMD ["scan-and-dashboard"]
